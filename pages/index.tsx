@@ -37,6 +37,23 @@ const IndexPage = () => {
           }}
         />
       </div>
+      <div
+        style={{
+          fontSize: "1.25rem",
+          lineHeight: "1.75rem",
+          marginTop: "2rem",
+        }}
+      >
+        Custom Pages :
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", marginTop: "1rem" }}>
+        <Button
+          text="Tree Demo"
+          onClick={() => {
+            router.push("/custom-tree");
+          }}
+        />
+      </div>
     </div>
   );
 };
