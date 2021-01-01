@@ -6,7 +6,7 @@ export interface Circle {
 }
 
 const generateCircles = ({ width, height }: { width: number; height: number }) =>
-  new Array(width < 360 ? 40 : 185).fill(1).map((d, i) => {
+  new Array(width < 360 ? 40 : 185).fill(1).map((_d, i) => {
     const radius = 25 - Math.random() * 20;
     return {
       id: `${i}`,
