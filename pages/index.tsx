@@ -36,6 +36,18 @@ const IndexPage = () => {
             router.push("/demo-dendrogram");
           }}
         />
+        <Button
+          text="Drag i"
+          onClick={() => {
+            router.push("/drag-i");
+          }}
+        />
+        <Button
+          text="Drag ii"
+          onClick={() => {
+            router.push("/drag-ii");
+          }}
+        />
       </div>
       <div
         style={{
