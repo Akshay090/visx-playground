@@ -1,7 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Group } from "@visx/group";
 import { Tree, hierarchy } from "@visx/hierarchy";
-import { HierarchyPointNode } from "@visx/hierarchy/lib/types";
+import {
+  HierarchyPointLink,
+  HierarchyPointNode,
+} from "@visx/hierarchy/lib/types";
 import { LinkHorizontal } from "@visx/shape";
 import { LinearGradient } from "@visx/gradient";
 
@@ -75,7 +78,7 @@ function Node({ node, setSelectedNode }: INode) {
   const centerY = -height / 2;
   const isRoot = node.depth === 0;
   const isParent = !!node.children;
-  console.log("all node", node);
+  // console.log("all node", node);
 
   if (isRoot) return <RootNode node={node} setSelectedNode={setSelectedNode} />;
   if (isParent)
@@ -181,13 +184,42 @@ export default function Example({
   margin = defaultMargin,
 }: TreeProps) {
   const [selNode, setSelNode] = useState<HierarchyNode>();
+  const [selNodeAllParent, setSelNodeAllParent] = useState<string[]>();
   const setSelectedNode = (node: HierarchyNode) => {
     setSelNode(node);
   };
+
+  useEffect(() => {
+    if (selNode) {
+      let selectedNode = { ...selNode };
+      const allParents = [selectedNode.data.name];
+      console.log(selNode);
+      while (selectedNode.parent !== null) {
+        const currentParent = selectedNode.parent.data.name;
+        allParents.push(currentParent);
+        console.log("currentParent ", currentParent);
+        selectedNode = selectedNode.parent;
+      }
+      console.log("all parents", allParents);
+      setSelNodeAllParent(allParents);
+    }
+    if (selNode === null) {
+      setSelNodeAllParent(null);
+    }
+  }, [selNode]);
   const data = useMemo(() => hierarchy(rawTree), []);
   const yMax = height - margin.top - margin.bottom;
   const xMax = width - margin.left - margin.right;
 
+  const isPathHighlight = (link: HierarchyPointLink<TreeNode>): boolean => {
+    const targetLinkName = link.target.data.name;
+    // highlights from current node to its parent
+    // const matchLinkAndNode = targetLinkName === selNode?.data.name;
+    // return matchLinkAndNode;
+
+    // hilights the entire path till current node
+    return selNodeAllParent?.includes(targetLinkName);
+  };
   return width < 10 ? null : (
     <svg width={width} height={height}>
       <LinearGradient id="lg" from={peach} to={pink} />
@@ -196,19 +228,13 @@ export default function Example({
         {(tree) => (
           <Group top={margin.top} left={margin.left}>
             {tree.links().map((link, i) => {
-              console.log(link, "link");
+              // console.log(link, "link");
               return (
                 <LinkHorizontal
                   key={`link-${i}`}
                   data={link}
-                  stroke={
-                    link.target.data.name === selNode?.data.name
-                      ? green
-                      : lightpurple
-                  }
-                  strokeWidth={
-                    link.target.data.name === selNode?.data.name ? "5" : "1"
-                  }
+                  stroke={isPathHighlight(link) ? green : lightpurple}
+                  strokeWidth={isPathHighlight(link) ? "5" : "1"}
                   fill="none"
                 />
               );
