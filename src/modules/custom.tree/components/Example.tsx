@@ -98,9 +98,7 @@ function Node({ node, setSelectedNode }: INode) {
         rx={10}
         onClick={() => {
           setSelectedNode(node);
-          console.log("setted ", node);
-
-          // alert(`clicked: ${JSON.stringify(node.data.name)}`);
+          // console.log("setted ", node);
         }}
       />
       <text
@@ -193,14 +191,14 @@ export default function Example({
     if (selNode) {
       let selectedNode = { ...selNode };
       const allParents = [selectedNode.data.name];
-      console.log(selNode);
+      // console.log(selNode);
       while (selectedNode.parent !== null) {
         const currentParent = selectedNode.parent.data.name;
         allParents.push(currentParent);
-        console.log("currentParent ", currentParent);
+        // console.log("currentParent ", currentParent);
         selectedNode = selectedNode.parent;
       }
-      console.log("all parents", allParents);
+      // console.log("all parents", allParents);
       setSelNodeAllParent(allParents);
     }
     if (selNode === null) {
@@ -227,8 +225,17 @@ export default function Example({
       <Tree<TreeNode> root={data} size={[yMax, xMax]}>
         {(tree) => (
           <Group top={margin.top} left={margin.left}>
+            {console.log(tree.links(), "tree.links()", tree.descendants()[0])}
+            {selNode && (
+              <LinkHorizontal
+                key={`link-${-1}`}
+                data={{ source: selNode, target: tree.descendants()[0] }}
+                stroke={peach}
+                strokeWidth={5}
+                fill="none"
+              />
+            )}
             {tree.links().map((link, i) => {
-              // console.log(link, "link");
               return (
                 <LinkHorizontal
                   key={`link-${i}`}
