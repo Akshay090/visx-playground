@@ -97,14 +97,14 @@ export default function DragII({ data = [], width, height }: DragIIProps) {
                 y={y + dy - 4}
                 pointerEvents="none"
               />
-              <circle
+              {/* <circle
                 cx={x}
                 cy={y}
                 r={4}
                 fill="transparent"
                 stroke="white"
                 pointerEvents="none"
-              />
+              />  */}
             </g>
           )}
           {/* create the drawing area */}

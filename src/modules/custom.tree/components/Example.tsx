@@ -220,6 +220,20 @@ export default function Example({
   };
   return width < 10 ? null : (
     <svg width={width} height={height}>
+      <defs>
+        <marker
+          id="arrow"
+          viewBox="0 -5 10 10"
+          refX="35"
+          refY="-.5"
+          markerWidth="8"
+          markerHeight="8"
+          orient="auto"
+          fill="#fff"
+        >
+          <path d="M0,-5L10,0L0,5" />
+        </marker>
+      </defs>
       <LinearGradient id="lg" from={peach} to={pink} />
       <rect width={width} height={height} rx={14} fill={background} />
       <Tree<TreeNode> root={data} size={[yMax, xMax]}>
@@ -227,12 +241,14 @@ export default function Example({
           <Group top={margin.top} left={margin.left}>
             {console.log(tree.links(), "tree.links()", tree.descendants()[0])}
             {selNode && (
+              // loop back to root when any node is selected
               <LinkHorizontal
                 key={`link-${-1}`}
                 data={{ source: selNode, target: tree.descendants()[0] }}
                 stroke={peach}
-                strokeWidth={5}
+                strokeWidth={1}
                 fill="none"
+                markerEnd="url(#arrow)"
               />
             )}
             {tree.links().map((link, i) => {
@@ -241,8 +257,9 @@ export default function Example({
                   key={`link-${i}`}
                   data={link}
                   stroke={isPathHighlight(link) ? green : lightpurple}
-                  strokeWidth={isPathHighlight(link) ? "5" : "1"}
+                  strokeWidth={isPathHighlight(link) ? "1" : "1"}
                   fill="none"
+                  markerEnd="url(#arrow)"
                 />
               );
             })}
