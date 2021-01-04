@@ -211,7 +211,7 @@ export default function Example({
 
   const isPathHighlight = (link: HierarchyPointLink<TreeNode>): boolean => {
     const targetLinkName = link.target.data.name;
-    // highlights from current node to its parent
+    // highlights from current node to its parent node
     // const matchLinkAndNode = targetLinkName === selNode?.data.name;
     // return matchLinkAndNode;
 
@@ -223,11 +223,11 @@ export default function Example({
       <defs>
         <marker
           id="arrow"
-          viewBox="0 -5 10 10"
-          refX="35"
+          viewBox="0 -5 30 30"
+          refX="20"
           refY="-.5"
-          markerWidth="8"
-          markerHeight="8"
+          markerWidth="14"
+          markerHeight="14"
           orient="auto"
           fill="#fff"
         >
@@ -246,7 +246,7 @@ export default function Example({
                 key={`link-${-1}`}
                 data={{ source: selNode, target: tree.descendants()[0] }}
                 stroke={peach}
-                strokeWidth={1}
+                strokeWidth={5}
                 fill="none"
                 markerEnd="url(#arrow)"
               />
@@ -257,9 +257,9 @@ export default function Example({
                   key={`link-${i}`}
                   data={link}
                   stroke={isPathHighlight(link) ? green : lightpurple}
-                  strokeWidth={isPathHighlight(link) ? "1" : "1"}
+                  strokeWidth={isPathHighlight(link) ? "5" : "1"}
                   fill="none"
-                  markerEnd="url(#arrow)"
+                  markerEnd={isPathHighlight(link) ? "url(#arrow)" : ""}
                 />
               );
             })}
