@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Group } from "@visx/group";
 import { Tree, hierarchy } from "@visx/hierarchy";
 import { HierarchyPointNode } from "@visx/hierarchy/lib/types";
@@ -186,6 +186,9 @@ export default function Example({
   height,
   margin = defaultMargin,
 }: TreeProps) {
+  const [isShowBasePath, setShowBasePath] = useState(true);
+  const [isShowLoopback, setShowLoopback] = useState(true);
+
   const data = useMemo(() => hierarchy(rawTree), []);
   const yMax = height - margin.top - margin.bottom;
   const xMax = width - margin.left - margin.right;
@@ -214,61 +217,104 @@ export default function Example({
   };
 
   return width < 10 ? null : (
-    <svg width={width} height={height}>
-      <defs>
-        <marker
-          id="arrow"
-          viewBox="0 -5 30 30"
-          refX="20"
-          refY="-.5"
-          markerWidth="14"
-          markerHeight="14"
-          orient="auto"
-          fill="#fff"
-        >
-          <path d="M0,-5L10,0L0,5" />
-        </marker>
-      </defs>
-      <LinearGradient id="lg" from={peach} to={pink} />
-      <rect width={width} height={height} rx={14} fill={background} />
-      <Tree<TreeNode> root={data} size={[yMax, xMax]}>
-        {(tree) => (
-          <Group top={margin.top} left={margin.left}>
-            {console.log(tree.links(), "tree.links()", tree.descendants()[0])}
-            {console.log(
-              getTreeNodeByName(tree, loopBackNodes[1].source),
-              "tree.descendants()"
-            )}
-            {tree.links().map((link, i) => {
-              return (
-                <LinkHorizontal
-                  key={`link-${i}`}
-                  data={link}
-                  stroke={green}
-                  strokeWidth={"5"}
-                  fill="none"
-                  // markerEnd="url(#arrow)" to add arrow uncomment it
-                />
-              );
-            })}
-            {loopBackNodes.map((node, i) => {
-              return (
-                <LinkHorizontalCurve
-                  key={`loop-link-${i}`}
-                  data={processLoopBackNodes(tree, node)}
-                  stroke={peach}
-                  strokeWidth={3}
-                  fill="none"
-                  // markerEnd="url(#arrow)" to add arrow uncomment it
-                />
-              );
-            })}
-            {tree.descendants().map((node, i) => (
-              <Node key={`node-${i}`} node={node} />
-            ))}
-          </Group>
-        )}
-      </Tree>
-    </svg>
+    <div style={{ position: "relative" }}>
+      <div
+        style={{
+          position: "absolute",
+          right: "12%",
+          bottom: "10%",
+          maxWidth: "190px",
+          zIndex: 2000,
+          background: "rgba(255, 255, 255, 0.8)",
+          color: "#35477d",
+          borderRadius: "8px",
+          padding: "12px",
+          lineHeight: "1.2em",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <label>
+            <input
+              type="checkbox"
+              defaultChecked={isShowBasePath}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowBasePath((prev) => !prev);
+              }}
+            />
+            &nbsp;Show base path
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              defaultChecked={isShowLoopback}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowLoopback((prev) => !prev);
+              }}
+            />
+            &nbsp;Show loopbacks
+          </label>
+        </div>
+      </div>
+      <svg width={width} height={height}>
+        <defs>
+          <marker
+            id="arrow"
+            viewBox="0 -5 30 30"
+            refX="20"
+            refY="-.5"
+            markerWidth="14"
+            markerHeight="14"
+            orient="auto"
+            fill="#fff"
+          >
+            <path d="M0,-5L10,0L0,5" />
+          </marker>
+        </defs>
+        <LinearGradient id="lg" from={peach} to={pink} />
+        <rect width={width} height={height} rx={14} fill={background} />
+        <Tree<TreeNode> root={data} size={[yMax, xMax]}>
+          {(tree) => (
+            <Group top={margin.top} left={margin.left}>
+              {console.log(tree.links(), "tree.links()", tree.descendants()[0])}
+              {console.log(
+                getTreeNodeByName(tree, loopBackNodes[1].source),
+                "tree.descendants()"
+              )}
+              {isShowBasePath &&
+                tree.links().map((link, i) => {
+                  return (
+                    <LinkHorizontal
+                      key={`link-${i}`}
+                      data={link}
+                      stroke={green}
+                      strokeWidth={"5"}
+                      fill="none"
+                      // markerEnd="url(#arrow)" to add arrow uncomment it
+                    />
+                  );
+                })}
+              {isShowLoopback &&
+                loopBackNodes.map((node, i) => {
+                  return (
+                    <LinkHorizontalCurve
+                      key={`loop-link-${i}`}
+                      data={processLoopBackNodes(tree, node)}
+                      stroke={peach}
+                      strokeWidth={3}
+                      fill="none"
+                      // markerEnd="url(#arrow)" to add arrow uncomment it
+                    />
+                  );
+                })}
+              {tree.descendants().map((node, i) => (
+                <Node key={`node-${i}`} node={node} />
+              ))}
+            </Group>
+          )}
+        </Tree>
+      </svg>
+    </div>
   );
 }
