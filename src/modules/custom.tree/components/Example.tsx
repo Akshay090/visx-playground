@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { Group } from "@visx/group";
 import { Tree, hierarchy } from "@visx/hierarchy";
 import { HierarchyPointNode } from "@visx/hierarchy/lib/types";
-import { LinkHorizontal } from "@visx/shape";
+import { LinkHorizontal, LinkHorizontalCurve } from "@visx/shape";
 import { LinearGradient } from "@visx/gradient";
 
 const peach = "#fd9b93";
@@ -207,7 +207,9 @@ export default function Example({
     const target = getTreeNodeByName(tree, node.target);
 
     // handling case where loopback node don't realy exist.
-    if (source && target) return { source, target };
+    // the source target assignment is flipped so loopback curve upwards.
+    if (source && target) return { source: target, target: source };
+
     return null;
   };
 
@@ -251,7 +253,7 @@ export default function Example({
             })}
             {loopBackNodes.map((node, i) => {
               return (
-                <LinkHorizontal
+                <LinkHorizontalCurve
                   key={`loop-link-${i}`}
                   data={processLoopBackNodes(tree, node)}
                   stroke={peach}
@@ -262,10 +264,7 @@ export default function Example({
               );
             })}
             {tree.descendants().map((node, i) => (
-              <Node
-                key={`node-${i}`}
-                node={node}
-              />
+              <Node key={`node-${i}`} node={node} />
             ))}
           </Group>
         )}
