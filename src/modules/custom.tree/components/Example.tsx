@@ -1,10 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { Group } from "@visx/group";
 import { Tree, hierarchy } from "@visx/hierarchy";
-import {
-  HierarchyPointLink,
-  HierarchyPointNode,
-} from "@visx/hierarchy/lib/types";
+import { HierarchyPointNode } from "@visx/hierarchy/lib/types";
 import { LinkHorizontal } from "@visx/shape";
 import { LinearGradient } from "@visx/gradient";
 
@@ -13,7 +10,7 @@ const pink = "#fe6e9e";
 const blue = "#03c0dc";
 const green = "#26deb0";
 const plum = "#71248e";
-const lightpurple = "#374469";
+// const lightpurple = "#374469";
 const white = "#ffffff";
 export const background = "#272b4d";
 
@@ -23,6 +20,19 @@ interface TreeNode {
 }
 
 type HierarchyNode = HierarchyPointNode<TreeNode>;
+
+interface ILoopBack {
+  source: string;
+  target: string;
+}
+
+const loopBackNodes: ILoopBack[] = [
+  { source: "A1", target: "T" },
+  { source: "C1", target: "A" },
+  { source: "C1", target: "Z" },
+  { source: "D", target: "B" },
+  { source: "D3", target: "B3" },
+];
 
 const rawTree: TreeNode = {
   name: "T",
@@ -67,22 +77,19 @@ const rawTree: TreeNode = {
 
 interface INode {
   node: HierarchyNode;
-  setSelectedNode: (node: HierarchyNode) => void;
 }
 
 /** Handles rendering Root, Parent, and other Nodes. */
-function Node({ node, setSelectedNode }: INode) {
+function Node({ node }: INode) {
   const width = 40;
   const height = 20;
   const centerX = -width / 2;
   const centerY = -height / 2;
   const isRoot = node.depth === 0;
   const isParent = !!node.children;
-  // console.log("all node", node);
 
-  if (isRoot) return <RootNode node={node} setSelectedNode={setSelectedNode} />;
-  if (isParent)
-    return <ParentNode node={node} setSelectedNode={setSelectedNode} />;
+  if (isRoot) return <RootNode node={node} />;
+  if (isParent) return <ParentNode node={node} />;
   return (
     <Group top={node.x} left={node.y}>
       <rect
@@ -97,8 +104,7 @@ function Node({ node, setSelectedNode }: INode) {
         strokeOpacity={0.6}
         rx={10}
         onClick={() => {
-          setSelectedNode(node);
-          // console.log("setted ", node);
+          // console.log("node click", node);
         }}
       />
       <text
@@ -115,9 +121,9 @@ function Node({ node, setSelectedNode }: INode) {
   );
 }
 
-function RootNode({ node, setSelectedNode }: INode) {
+function RootNode({ node }: INode) {
   return (
-    <Group top={node.x} left={node.y} onClick={() => setSelectedNode(null)}>
+    <Group top={node.x} left={node.y}>
       <circle r={12} fill="url('#lg')" />
       <text
         dy=".33em"
@@ -133,7 +139,7 @@ function RootNode({ node, setSelectedNode }: INode) {
   );
 }
 
-function ParentNode({ node, setSelectedNode }: INode) {
+function ParentNode({ node }: INode) {
   const width = 40;
   const height = 20;
   const centerX = -width / 2;
@@ -150,7 +156,6 @@ function ParentNode({ node, setSelectedNode }: INode) {
         stroke={blue}
         strokeWidth={1}
         onClick={() => {
-          setSelectedNode(node);
           // alert(`clicked: ${JSON.stringify(node.data.name)}`);
         }}
       />
@@ -181,43 +186,31 @@ export default function Example({
   height,
   margin = defaultMargin,
 }: TreeProps) {
-  const [selNode, setSelNode] = useState<HierarchyNode>();
-  const [selNodeAllParent, setSelNodeAllParent] = useState<string[]>();
-  const setSelectedNode = (node: HierarchyNode) => {
-    setSelNode(node);
-  };
-
-  useEffect(() => {
-    if (selNode) {
-      let selectedNode = { ...selNode };
-      const allParents = [selectedNode.data.name];
-      // console.log(selNode);
-      while (selectedNode.parent !== null) {
-        const currentParent = selectedNode.parent.data.name;
-        allParents.push(currentParent);
-        // console.log("currentParent ", currentParent);
-        selectedNode = selectedNode.parent;
-      }
-      // console.log("all parents", allParents);
-      setSelNodeAllParent(allParents);
-    }
-    if (selNode === null) {
-      setSelNodeAllParent(null);
-    }
-  }, [selNode]);
   const data = useMemo(() => hierarchy(rawTree), []);
   const yMax = height - margin.top - margin.bottom;
   const xMax = width - margin.left - margin.right;
 
-  const isPathHighlight = (link: HierarchyPointLink<TreeNode>): boolean => {
-    const targetLinkName = link.target.data.name;
-    // highlights from current node to its parent node
-    // const matchLinkAndNode = targetLinkName === selNode?.data.name;
-    // return matchLinkAndNode;
-
-    // hilights the entire path till current node
-    return selNodeAllParent?.includes(targetLinkName);
+  const getTreeNodeByName = (tree: HierarchyNode, nodeName: string) => {
+    return tree
+      .descendants()
+      .find((treeNode) => treeNode.data.name === nodeName);
   };
+
+  const processLoopBackNodes = (
+    tree: HierarchyNode,
+    node: ILoopBack
+  ): {
+    source: HierarchyNode;
+    target: HierarchyNode;
+  } => {
+    const source = getTreeNodeByName(tree, node.source);
+    const target = getTreeNodeByName(tree, node.target);
+
+    // handling case where loopback node don't realy exist.
+    if (source && target) return { source, target };
+    return null;
+  };
+
   return width < 10 ? null : (
     <svg width={width} height={height}>
       <defs>
@@ -240,26 +233,31 @@ export default function Example({
         {(tree) => (
           <Group top={margin.top} left={margin.left}>
             {console.log(tree.links(), "tree.links()", tree.descendants()[0])}
-            {selNode && (
-              // loop back to root when any node is selected
-              <LinkHorizontal
-                key={`link-${-1}`}
-                data={{ source: selNode, target: tree.descendants()[0] }}
-                stroke={peach}
-                strokeWidth={5}
-                fill="none"
-                markerEnd="url(#arrow)"
-              />
+            {console.log(
+              getTreeNodeByName(tree, loopBackNodes[1].source),
+              "tree.descendants()"
             )}
             {tree.links().map((link, i) => {
               return (
                 <LinkHorizontal
                   key={`link-${i}`}
                   data={link}
-                  stroke={isPathHighlight(link) ? green : lightpurple}
-                  strokeWidth={isPathHighlight(link) ? "5" : "1"}
+                  stroke={green}
+                  strokeWidth={"5"}
                   fill="none"
-                  markerEnd={isPathHighlight(link) ? "url(#arrow)" : ""}
+                  // markerEnd="url(#arrow)" to add arrow uncomment it
+                />
+              );
+            })}
+            {loopBackNodes.map((node, i) => {
+              return (
+                <LinkHorizontal
+                  key={`loop-link-${i}`}
+                  data={processLoopBackNodes(tree, node)}
+                  stroke={peach}
+                  strokeWidth={3}
+                  fill="none"
+                  // markerEnd="url(#arrow)" to add arrow uncomment it
                 />
               );
             })}
@@ -267,7 +265,6 @@ export default function Example({
               <Node
                 key={`node-${i}`}
                 node={node}
-                setSelectedNode={setSelectedNode}
               />
             ))}
           </Group>
